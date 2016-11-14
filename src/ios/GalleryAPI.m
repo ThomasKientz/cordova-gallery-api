@@ -14,33 +14,33 @@
     [self.commandDelegate runInBackground:^{
         __block NSDictionary *result;
         PHAuthorizationStatus status = [PHPhotoLibrary authorizationStatus];
-        
+
         if (status == PHAuthorizationStatusAuthorized) {
             // Access has been granted.
             result = @{@"success":@(true), @"message":@"Authorized"};
             [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:result]
                                         callbackId:command.callbackId];
         }
-        
+
         else if (status == PHAuthorizationStatusDenied) {
             // Access has been denied.
             result = @{@"success":@(false), @"message":@"Denied"};
             [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:result]
                                         callbackId:command.callbackId];
         }
-        
+
         else if (status == PHAuthorizationStatusNotDetermined) {
-            
+
             // Access has not been determined.
             [PHPhotoLibrary requestAuthorization:^(PHAuthorizationStatus status) {
-                
+
                 if (status == PHAuthorizationStatusAuthorized) {
                     // Access has been granted.
                     result = @{@"success":@(true), @"message":@"Authorized"};
                     [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:result]
                                                 callbackId:command.callbackId];
                 }
-                
+
                 else {
                     // Access has been denied.
                     result = @{@"success":@(false), @"message":@"Denied"};
@@ -49,7 +49,7 @@
                 }
             }];
         }
-        
+
         else if (status == PHAuthorizationStatusRestricted) {
             // Restricted access - normally won't happen.
             result = @{@"success":@(false), @"message":@"Restricted"};
@@ -65,14 +65,14 @@
         NSDictionary* subtypes = [GalleryAPI subtypes];
         __block NSMutableArray* albums = [[NSMutableArray alloc] init];
         __block NSDictionary* cameraRoll;
-        
+
         NSArray* collectionTypes = @[
                                      @{ @"title" : @"smart",
                                         @"type" : [NSNumber numberWithInteger:PHAssetCollectionTypeSmartAlbum] },
                                      @{ @"title" : @"album",
                                         @"type" : [NSNumber numberWithInteger:PHAssetCollectionTypeAlbum] }
                                      ];
-        
+
         for (NSDictionary* collectionType in collectionTypes) {
             [[PHAssetCollection fetchAssetCollectionsWithType:[collectionType[@"type"] integerValue] subtype:PHAssetCollectionSubtypeAny options:nil] enumerateObjectsUsingBlock:^(PHAssetCollection* collection, NSUInteger idx, BOOL* stop) {
                 if (collection != nil && collection.localizedTitle != nil && collection.localIdentifier != nil && ([subtypes.allKeys indexOfObject:@(collection.assetCollectionSubtype)] != NSNotFound)) {
@@ -99,12 +99,12 @@
                 }
             }];
         }
-        
+
         if (cameraRoll)
             [albums insertObject:cameraRoll atIndex:0];
-        
+
         CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:albums];
-        
+
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
     }];
 }
@@ -119,10 +119,9 @@
         options.synchronous = YES;
         options.resizeMode = PHImageRequestOptionsResizeModeFast;
         options.networkAccessAllowed = true;
-        
+
         PHFetchResult* collections = [PHAssetCollection fetchAssetCollectionsWithLocalIdentifiers:@[ album[@"id"] ]
                                                                                           options:nil];
-        
         if (collections && collections.count > 0) {
             PHAssetCollection* collection = collections[0];
             [[PHAsset fetchAssetsInAssetCollection:collection
@@ -144,11 +143,11 @@
                                         }];
             }];
         }
-        
+
         NSArray* reversedAssests = [[assets reverseObjectEnumerator] allObjects];
-        
+
         CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:reversedAssests];
-        
+
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
     }];
 }
@@ -157,27 +156,27 @@
 {
     // Check command.arguments here.
     [self.commandDelegate runInBackground:^{
-        
+
         PHImageRequestOptions* options = [PHImageRequestOptions new];
         options.synchronous = YES;
         options.resizeMode = PHImageRequestOptionsResizeModeFast;
         options.networkAccessAllowed = true;
 
         NSMutableDictionary* media = [command argumentAtIndex:0];
-        
+
         NSString* imageId = [media[@"id"] stringByReplacingOccurrencesOfString:@"/" withString:@"^"];
         NSString* docsPath = [NSTemporaryDirectory() stringByStandardizingPath];
         NSString* thumbnailPath = [NSString stringWithFormat:@"%@/%@_mthumb.png", docsPath, imageId];
-        
+
         NSFileManager* fileMgr = [[NSFileManager alloc] init];
-        
+
         media[@"thumbnail"] = thumbnailPath;
         if ([fileMgr fileExistsAtPath:thumbnailPath])
             NSLog(@"file exist");
         else {
             NSLog(@"file doesn't exist");
             media[@"error"] = @"true";
-            
+
             PHFetchResult* assets = [PHAsset fetchAssetsWithLocalIdentifiers:@[ media[@"id"] ]
                                                                      options:nil];
             if (assets && assets.count > 0) {
@@ -203,7 +202,7 @@
             }
             else {
                 if ([media[@"type"] isEqualToString:@"PHAssetCollectionSubtypeAlbumMyPhotoStream"]) {
-                    
+
                     [[PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeAlbum
                                                               subtype:PHAssetCollectionSubtypeAlbumMyPhotoStream
                                                               options:nil] enumerateObjectsUsingBlock:^(PHAssetCollection* collection, NSUInteger idx, BOOL* stop) {
@@ -237,10 +236,10 @@
                 }
             }
         }
-        
+
         CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK
                                                       messageAsDictionary:media];
-        
+
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
     }];
 }
@@ -248,24 +247,24 @@
 - (void)getHQImageData:(CDVInvokedUrlCommand*)command
 {
     [self.commandDelegate runInBackground:^{
-        
+
         PHImageRequestOptions* options = [PHImageRequestOptions new];
         options.synchronous = YES;
         options.resizeMode = PHImageRequestOptionsResizeModeNone;
         options.deliveryMode = PHImageRequestOptionsDeliveryModeHighQualityFormat;
         options.networkAccessAllowed = true;
-        
+
         NSString* mediaURL = nil;
-        
+
         NSMutableDictionary* media = [command argumentAtIndex:0];
-        
+
         NSString* docsPath = [[NSTemporaryDirectory() stringByStandardizingPath] stringByAppendingPathComponent:kDirectoryName];
         NSError* error;
-        
+
         NSFileManager* fileMgr = [NSFileManager new];
-        
+
         BOOL canCreateDirectory = false;
-        
+
         if ([fileMgr fileExistsAtPath:docsPath]) {
             if (![fileMgr removeItemAtPath:docsPath
                                      error:&error])
@@ -275,9 +274,9 @@
         }
         else
             canCreateDirectory = true;
-        
+
         BOOL canWriteFile = true;
-        
+
         if (canCreateDirectory) {
             if (![[NSFileManager defaultManager] createDirectoryAtPath:docsPath
                                            withIntermediateDirectories:NO
@@ -287,15 +286,15 @@
                 canWriteFile = false;
             }
         }
-        
+
         if (canWriteFile) {
             NSString* imageId = [media[@"id"] stringByReplacingOccurrencesOfString:@"/" withString:@"^"];
             NSString* imagePath = [NSString stringWithFormat:@"%@/%@.jpg", docsPath, imageId];
             //                NSString* imagePath = [NSString stringWithFormat:@"%@/temp.png", docsPath];
-            
+
             __block NSData* mediaData;
             mediaURL = imagePath;
-            
+
             PHFetchResult* assets = [PHAsset fetchAssetsWithLocalIdentifiers:@[ media[@"id"] ]
                                                                      options:nil];
             if (assets && assets.count > 0) {
@@ -312,7 +311,7 @@
                                                                         image = [self fixrotation:image];
                                                                         mediaData = UIImageJPEGRepresentation(image, 1);
                                                                     }
-                                                                    
+
                                                                     //writing image to a file
                                                                     NSError* err = nil;
                                                                     if ([mediaData writeToFile:imagePath
@@ -356,7 +355,7 @@
             }
             else {
                 if ([media[@"type"] isEqualToString:@"PHAssetCollectionSubtypeAlbumMyPhotoStream"]) {
-                    
+
                     [[PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeAlbum
                                                               subtype:PHAssetCollectionSubtypeAlbumMyPhotoStream
                                                               options:nil] enumerateObjectsUsingBlock:^(PHAssetCollection* collection, NSUInteger idx, BOOL* stop) {
@@ -377,7 +376,7 @@
                                                                                             image = [self fixrotation:image];
                                                                                             mediaData = UIImageJPEGRepresentation(image, 1);
                                                                                         }
-                                                                                        
+
                                                                                         //writing image to a file
                                                                                         NSError* err = nil;
                                                                                         if ([mediaData writeToFile:imagePath
@@ -400,10 +399,10 @@
                 }
             }
         }
-        
+
         CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:mediaURL ? CDVCommandStatus_OK : CDVCommandStatus_ERROR
                                                           messageAsString:mediaURL];
-        
+
         [self.commandDelegate sendPluginResult:pluginResult
                                     callbackId:command.callbackId];
     }];
@@ -426,24 +425,24 @@
 
 - (UIImage*)fixrotation:(UIImage*)image
 {
-    
+
     if (image.imageOrientation == UIImageOrientationUp)
         return image;
     CGAffineTransform transform = CGAffineTransformIdentity;
-    
+
     switch (image.imageOrientation) {
         case UIImageOrientationDown:
         case UIImageOrientationDownMirrored:
             transform = CGAffineTransformTranslate(transform, image.size.width, image.size.height);
             transform = CGAffineTransformRotate(transform, M_PI);
             break;
-            
+
         case UIImageOrientationLeft:
         case UIImageOrientationLeftMirrored:
             transform = CGAffineTransformTranslate(transform, image.size.width, 0);
             transform = CGAffineTransformRotate(transform, M_PI_2);
             break;
-            
+
         case UIImageOrientationRight:
         case UIImageOrientationRightMirrored:
             transform = CGAffineTransformTranslate(transform, 0, image.size.height);
@@ -453,14 +452,14 @@
         case UIImageOrientationUpMirrored:
             break;
     }
-    
+
     switch (image.imageOrientation) {
         case UIImageOrientationUpMirrored:
         case UIImageOrientationDownMirrored:
             transform = CGAffineTransformTranslate(transform, image.size.width, 0);
             transform = CGAffineTransformScale(transform, -1, 1);
             break;
-            
+
         case UIImageOrientationLeftMirrored:
         case UIImageOrientationRightMirrored:
             transform = CGAffineTransformTranslate(transform, image.size.height, 0);
@@ -472,7 +471,7 @@
         case UIImageOrientationRight:
             break;
     }
-    
+
     // Now we draw the underlying CGImage into a new context, applying the transform
     // calculated above.
     CGContextRef ctx = CGBitmapContextCreate(NULL, image.size.width, image.size.height,
@@ -488,12 +487,12 @@
             // Grr...
             CGContextDrawImage(ctx, CGRectMake(0, 0, image.size.height, image.size.width), image.CGImage);
             break;
-            
+
         default:
             CGContextDrawImage(ctx, CGRectMake(0, 0, image.size.width, image.size.height), image.CGImage);
             break;
     }
-    
+
     // And now we just create a new UIImage from the drawing context
     CGImageRef cgimg = CGBitmapContextCreateImage(ctx);
     UIImage* img = [UIImage imageWithCGImage:cgimg];
