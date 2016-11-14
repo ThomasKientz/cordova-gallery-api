@@ -6,6 +6,9 @@
 
 @interface GalleryAPI ()
 
+@property (nonatomic, strong) NSString *activeCollection;
+@property (nonatomic, strong) NSDate *mediaDateOffset;
+
 @end
 
 @implementation GalleryAPI
@@ -124,8 +127,20 @@
                                                                                           options:nil];
         if (collections && collections.count > 0) {
             PHAssetCollection* collection = collections[0];
+
+            PHFetchOptions *fetchOptions = [PHFetchOptions new];
+            fetchOptions.fetchLimit = 20;
+            fetchOptions.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"creationDate" ascending:NO]];
+
+            // When requesting same collection again, show the next set of assets
+            if ([self.activeCollection isEqualToString:collection.localIdentifier]) {
+              fetchOptions.predicate = [NSPredicate predicateWithFormat:@"(creationDate < %@)", self.mediaDateOffset];
+            }
+            self.activeCollection = collection.localIdentifier;
+
             [[PHAsset fetchAssetsInAssetCollection:collection
-                                           options:nil] enumerateObjectsUsingBlock:^(PHAsset* obj, NSUInteger idx, BOOL* stop) {
+                                           options:fetchOptions] enumerateObjectsUsingBlock:^(PHAsset* obj, NSUInteger idx, BOOL* stop) {
+                self.mediaDateOffset = obj.creationDate;
                 if (obj.mediaType == PHAssetMediaTypeImage)
                     [assets addObject:@{
                                         @"id" : obj.localIdentifier,
