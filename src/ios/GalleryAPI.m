@@ -144,17 +144,8 @@
                 if (obj.mediaType == PHAssetMediaTypeImage)
                     [assets addObject:@{
                                         @"id" : obj.localIdentifier,
-                                        @"title" : @"",
-                                        @"orientation" : @"up",
-                                        @"lat" : @4,
-                                        @"lng" : @5,
-                                        @"width" : [NSNumber numberWithFloat:obj.pixelWidth],
-                                        @"height" : [NSNumber numberWithFloat:obj.pixelHeight],
-                                        @"size" : @0,
                                         @"data" : @"",
                                         @"thumbnail" : @"",
-                                        @"error" : @"false",
-                                        @"type" : subtypes[@(collection.assetCollectionSubtype)]
                                         }];
             }];
         }
