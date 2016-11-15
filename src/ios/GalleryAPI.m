@@ -186,7 +186,7 @@
                                                                      options:nil];
             if (assets && assets.count > 0) {
                 [[PHImageManager defaultManager] requestImageForAsset:assets[0]
-                                                           targetSize:CGSizeMake(300, 300)
+                                                           targetSize:CGSizeMake(120, 120)
                                                           contentMode:PHImageContentModeAspectFill
                                                               options:options
                                                         resultHandler:^(UIImage* _Nullable result, NSDictionary* _Nullable info) {
