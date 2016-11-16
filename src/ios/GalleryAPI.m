@@ -176,10 +176,10 @@
     NSFileManager* fileMgr = [[NSFileManager alloc] init];
 
     media[@"thumbnail"] = thumbnailPath;
-    if ([fileMgr fileExistsAtPath:thumbnailPath])
-      NSLog(@"file exist");
-    else {
-      NSLog(@"file doesn't exist");
+    if ([fileMgr fileExistsAtPath:thumbnailPath]) {
+      //NSLog(@"file exist");
+    } else {
+      //NSLog(@"file doesn't exist");
       media[@"error"] = @"true";
 
       PHFetchResult* assets = [PHAsset fetchAssetsWithLocalIdentifiers:@[ media[@"id"] ]
