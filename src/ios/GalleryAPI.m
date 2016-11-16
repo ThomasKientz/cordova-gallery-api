@@ -270,14 +270,7 @@
 
     BOOL canCreateDirectory = false;
 
-    if ([fileMgr fileExistsAtPath:docsPath]) {
-      if (![fileMgr removeItemAtPath:docsPath
-                               error:&error])
-        NSLog(@"Delete directory error: %@", error);
-      else
-        canCreateDirectory = true;
-    }
-    else
+    if (![fileMgr fileExistsAtPath:docsPath])
       canCreateDirectory = true;
 
     BOOL canWriteFile = true;
